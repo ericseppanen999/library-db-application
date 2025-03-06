@@ -3,11 +3,17 @@
 Create a library database application using Python and SQLite.
 Steps:
   Project Specifications (10 Points) -- could potentially be time-consuming
+  
   ERD Design (15 Points) -- could potentially be time-consuming
+  
   BCNF (15 Points) -- not too time-consuming
+  
   SQL Schema (15 Points) -- not too time-consuming once previous 3 steps are done
+  
   Populating Tables (15 Points) -- not too time-consuming
+  
   Building the Application (20 Points) -- most likely the most time-consuming part.
+  
 
 Some Notes:
 
