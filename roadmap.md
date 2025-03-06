@@ -1,7 +1,9 @@
 ## Project Overview ##
 
 Create a library database application using Python and SQLite.
+
 Steps:
+
   Project Specifications (10 Points) -- could potentially be time-consuming
   
   ERD Design (15 Points) -- could potentially be time-consuming
