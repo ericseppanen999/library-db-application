@@ -49,10 +49,15 @@ Build Database Application:
 Today: March 5th
 
 Week of March 10th - March 16th
+
   - Complete steps (2-6), not overly time consuming steps.
+
 Week of March 17th - March 23rd
+
   - Complete a working version of the Database Application
+
 March 23rd - March 31st
+
   - Testing, debugging, improving, whatever.
 
 
