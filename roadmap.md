@@ -2,7 +2,7 @@
 
 Create a library database application using Python and SQLite.
 
-Steps:
+ # Steps: #
 
   Project Specifications (10 Points) -- could potentially be time-consuming
   
