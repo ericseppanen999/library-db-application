@@ -33,7 +33,7 @@
 ### Personnel: ###
 - Staff at the library
 - Attributes:
-    - PersonnelID      Unique Personnel ID, i.e. 3001
+    - PersonnelID     Unique Personnel ID, i.e. 3001
     - Role            Personnel current role, i.e. janitor.
     - Location        Where the Personnel works, i.e. "Burnaby"
     - Salary          What the Personnel currently makes, i.e. 85,000.00 
@@ -86,6 +86,3 @@
 - Attributes:
     - EventID     (FK to Event)
     - MemberID    (FK to Member)
-
-
-### F
