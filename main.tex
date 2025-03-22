@@ -1,0 +1,127 @@
+%--------------------
+% Packages
+% -------------------
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage{gentium}
+\usepackage{mathptmx} % Use Times Font
+\usepackage{amsmath}
+
+\usepackage[pdftex]{graphicx} % Required for including pictures
+\usepackage[swedish]{babel} % Swedish translations
+\usepackage[pdftex,linkcolor=black,pdfborder={0 0 0}]{hyperref} % Format links for pdf
+\usepackage{calc} % To reset the counter in the document after title page
+\usepackage{enumitem} % Includes lists
+
+\frenchspacing % No double spacing between sentences
+\linespread{1.2} % Set linespace
+\usepackage[a4paper, lmargin=0.1666\paperwidth, rmargin=0.1666\paperwidth, tmargin=0.1111\paperheight, bmargin=0.1111\paperheight]{geometry} %margins
+%\usepackage{parskip}
+
+\usepackage[all]{nowidow} % Tries to remove widows
+\usepackage[protrusion=true,expansion=true]{microtype} % Improves typography, load after fontpackage is selected
+
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+
+%-----------------------
+% Set pdf information and add title, fill in the fields
+%-----------------------
+\hypersetup{ 	
+pdfsubject = {},
+pdftitle = {},
+pdfauthor = {}
+}
+
+%-----------------------
+% Begin document
+%-----------------------
+\begin{document} %All text i dokumentet hamnar mellan dessa taggar, allt ovanför är formatering av dokumentet
+
+\begin{titlepage}
+   {\Huge
+     \input{titlepage.tex}
+   }
+\end{titlepage}
+
+\section{Database Specification}
+
+\subsection{Overview}
+
+The goal of this project is to build a database application for a library. The database will store information about library items, members, and personnel, as well as track the borrowing process and keep future records of items. 
+
+\subsection{Objectives}
+
+\begin{itemize}
+    \item{\textbf{Item Management}}\\
+    The database should record a variety of different types of library items including, but not limited to, print books, online books, CDs, and records.
+    \item{\textbf{Personnel Records}}\\
+    Record details of library personnel in a variety of roles and locations.
+    \item{\textbf{Customer Records}}\\
+    Record details of library customers, their contact information, membership type, etc.
+    \item{\textbf{Event Management}}\\
+    The application should capture details regarding events held at libraries. These events have an intended audience, and are held in social rooms. Events are only available to members of a library.
+    \item{\textbf{Future Item Tracking}}\\
+    Maintain records of items that may be added to the library in the future. Including their expected arrival date, general book information status, and more.
+    
+\end{itemize}
+
+\subsection{Requirements}
+
+\subsubsection{Library Items}
+
+The application should be able to handle a variety of different items including books, records, magazines, etc. For each item, the following information should be stored:
+
+
+\begin{itemize}
+    \item{Unique Identifier (itemID)}
+    \item{Type--to differentiate between books, records, etc.}
+    \item{Title}
+    \item{Author}
+    \item{Year of release}
+    \item{Vol/Issue--if applicable}
+    \item{Location--for physical items}
+    \item{Status--reserved, on hold, etc.}
+\end{itemize}
+
+\subsubsection{Borrowing Process}
+
+The application should be able to handle the action of a member borrowing/returning an item. The member/item should be tracked, dates should be recorded for when an item is borrowed. The return date should also be recorded when the item is returned. Fines should be recorded if items are not returned in time.
+
+\subsubsection{Event Management}
+
+The application should be able to record event-specific information such as event name, type, date, room number of the event, etc. There are intended audiences for each event that should be specified. Events are only available to members of the library, although members can attend events at any branch. Members can attend events for free. The database should record who has signed up for which event.
+
+\subsubsection{Personnel Management}
+
+Store details about staff members, including their unique employee ID, role, primary work location, and salary.
+
+\subsubsection{Future Items}
+
+The application should track items that may be added to the library in the future. So, a separate record with information such as title, author, as well as approval status (pending, approved or denied).
+
+\section{E/R Diagrams}
+
+insert image, more specification
+
+\section{Anomaly Analysis}
+
+To review our design, we need to ensure that every non-trivial functional dependency for each relation is a candidate key. This would prove that our schema is in BCNF and therefore does not allow anomalies. In our design: \\ \\ \textbf{1. Library Item}
+
+\begin{itemize}
+    \item{\textbf{Attributes: } ItemID, Type, Title, Author, Year, Issue, Location, Status}
+    \item{\textbf{Functional Dependencies: } \begin{equation}
+        \text{ItemID} \rightarrow \{\text{Type, Title, Author, Year, Issue, Location, Status}\}\\
+        \text{}
+    \end{equation}}
+\end{itemize}
+
+
+
+
+
+
+\subsection*{Subtitle}
+\lipsum[4-5]
+\end{document}
