@@ -731,7 +731,7 @@ def register_member(conn,cur):
             print("Registration cancelled.")
             return None
         
-        last_name=input("Enter your last name").strip()
+        last_name=input("Enter your last name: ").strip()
         email=input("Enter your email address: ").strip() or None
         phone_number=input("Enter your phone number: ").strip() or None
         
