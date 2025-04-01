@@ -2,6 +2,23 @@ import sqlite3
 from datetime import date,timedelta
 import time
 
+"""
+Resources:
+
+For table formatting:
+https://docs.python.org/3/library/string.html#format-specification-mini-language
+
+For general application structure:
+https://www.sqlitetutorial.net/sqlite-python/
+https://docs.python.org/3/library/sqlite3.html#
+
+For time handling:
+https://docs.python.org/3/library/datetime.html
+
+For SQLite3 error handling:
+https://docs.python.org/3/library/sqlite3.html#sqlite3-exceptions
+"""
+
 
 
 def connect_db():
@@ -12,6 +29,8 @@ def connect_db():
 
 
 def find_item(conn,cur):
+    # allows the user to search for an item in the library by title, author, or type
+    # displays a formatted table
     while True:
         time.sleep(1)
         print("\nFind an item in the library:")
@@ -30,11 +49,12 @@ def find_item(conn,cur):
             for row in results:
                 print(f"{row[0]:<4} {row[1]:<30} {row[2]:<20} {row[3]:<15} {row[4]:<12}")
         else:
-            print("No items found.")
+            print("No items found with your search criteria")
 
 
 
 def show_available_items(cur,limit=5):
+    # helper function to show available items in the library
     cur.execute("SELECT itemID,title,author FROM LibraryItem WHERE itemStatus='Available' ORDER BY itemID LIMIT ?",(limit,))
     rows=cur.fetchall()
 
@@ -45,11 +65,13 @@ def show_available_items(cur,limit=5):
         for r in rows:
             print(f"{r[0]:<4} {r[1]:<30} {r[2]:<20}")
     else:
-        print("\nNo items available at the moment.")
+        print("\nNo items available at the moment")
 
 
 
 def borrow_item(conn,cur,member_id):
+    # allows the user to borrow an item from the library
+    # displays a formatted table of available items
     while True:
         time.sleep(1)
         print("\nBorrow an item from the library:")
@@ -62,7 +84,7 @@ def borrow_item(conn,cur,member_id):
             break
 
         if not item_input.isdigit():
-            print("Invalid input. Enter a numeric item ID.")
+            print("Invalid input, ID must be numeric")
             continue
 
         item_id=int(item_input)
@@ -70,13 +92,14 @@ def borrow_item(conn,cur,member_id):
         row=cur.fetchone()
 
         if not row:
-            print("No item found with that ID.")
+            print("No item found with that ID")
             continue
 
         if row[0]!="Available":
-            print(f"Item {item_id} is not available (Status: {row[0]}).")
+            print(f"Item {item_id} is not available (Status: {row[0]})")
             continue
 
+        # due date is 14 days from today automatically    
         today=date.today()
         due=today+timedelta(days=14)
         
@@ -89,8 +112,9 @@ def borrow_item(conn,cur,member_id):
             break
 
         except sqlite3.IntegrityError as e:
-            print("This item is already borrowed by you or another member.")
-            print(f"DEBUG: {e}")
+            # TODO: change
+            print("This item is already borrowed by you or another member")
+            #print(f"DEBUG: {e}")
             continue
 
         except sqlite3.OperationalError as e:
@@ -100,12 +124,13 @@ def borrow_item(conn,cur,member_id):
 
 
 def return_item(cur,conn,member_id):
+    # allows the user to return an item to the library
     print("\nYour borrowed (unreturned) items:")
     cur.execute("SELECT B.itemID,L.title,L.author,B.borrowDate,B.dueDate FROM Borrows B JOIN LibraryItem L ON B.itemID=L.itemID WHERE B.memberID=? AND B.returnDate IS NULL",(member_id,))
     items=cur.fetchall()
 
     if not items:
-        print("You have no items to return.")
+        print("You have no items to return")
         return
     
     print(f"{'ID':<4} {'Title':<30} {'Author':<20} {'Borrowed':<12} {'Due':<12}")
@@ -113,16 +138,17 @@ def return_item(cur,conn,member_id):
 
     for item in items:
         print(f"{item[0]:<4} {item[1]:<30} {item[2]:<20} {item[3]:<12} {item[4]:<12}")
+    
     while True:
         time.sleep(1)
         print("\nEnter the ID of the item to return (or type EXIT() to cancel):")
         item_input=input("Item ID: ").strip()
         if item_input.upper()=="EXIT()":
-            print("Return process cancelled.")
+            print("Return process cancelled")
             break
 
         if not item_input.isdigit():
-            print("Invalid input. Enter a valid numeric item ID.")
+            print("Invalid input. Enter a valid numeric item ID")
             continue
 
         item_id=int(item_input)
@@ -130,95 +156,88 @@ def return_item(cur,conn,member_id):
         try:
             cur.execute("UPDATE Borrows SET returnDate=? WHERE itemID=? AND memberID=? AND returnDate IS NULL",(return_date,item_id,member_id))
             if cur.rowcount==0:
-                print("That item is not borrowed by you or already returned.")
+                print("That item is not borrowed by you or already returned")
             else:
                 conn.commit()
-                print(f"Item {item_id} returned on {return_date}.")
+                print(f"Item {item_id} returned on {return_date}")
             break
 
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            print(f"unknown error: {e}, file a helpRequest")
             break
 
 
 
 
 def donate_item(conn,cur):
-    print("\nDonate an item to the library:")
-    title=input("Enter the title (or type EXIT() to cancel): ").strip()
-    if title.upper()=="EXIT()":
-        print("Donation cancelled.")
-        return
-    
-    author=input("Enter the author (or type EXIT() to cancel): ").strip()
-    if author.upper()=="EXIT()":
-        print("Donation cancelled.")
-        return
-    
-    item_type=input("Enter the type (e.g., Book, DVD) (or type EXIT() to cancel): ").strip()
-    if item_type.upper()=="EXIT()":
-        print("Donation cancelled.")
-        return
-    
-    year_input=input("Enter the year of publication (or type EXIT() to cancel): ").strip()
-    if year_input.upper()=="EXIT()":
-        print("Donation cancelled.")
-        return
-    
-    try:
-        year=int(year_input)
-
-    except:
-        print("Invalid year input.")
-        return
-    
-    issue=input("Enter the issue number if applicable (or type EXIT() to cancel): ").strip()
-    if issue.upper()=="EXIT()":
-        print("Donation cancelled.")
-        return
-    
-    issue_number=None
-    if issue:
-        try:
-            issue_number=int(issue)
-        except:
-            print("Invalid issue number.")
+    # allows the user to donate an item to the library
+    while True:
+        print("\nDonate an item to the library:")
+        
+        title=input("Enter the title (or type EXIT() to cancel): ").strip()
+        if title.upper()=="EXIT()":
+            print("Donation cancelled")
             return
         
-    cur.execute("INSERT INTO LibraryItem (title,author,itemType,releaseYear,issueNumber) VALUES (?,?,?,?,?)",(title,author,item_type,year,issue_number))
-    item_id=cur.lastrowid
-    conn.commit()
+        author=input("Enter the author: ").strip()
+        item_type=input("Enter the type (e.g., Book, DVD): ").strip()
+        year_input=input("Enter the year of publication: ").strip()
+        
+        try:
+            year=int(year_input)
+        except:
+            print("Invalid year input")
+            continue
+        
+        issue=input("Enter the issue number if applicable (or type EXIT() to cancel): ").strip()
+        
+        issue_num=None
+        if issue:
+            try:
+                issue_num=int(issue)
+            except:
+                print("Invalid issue number.")
+                continue
+            
+        cur.execute("INSERT INTO LibraryItem (title,author,itemType,releaseYear,issueNumber) VALUES (?,?,?,?,?)",(title,author,item_type,year,issue_num))
+        item_id=cur.lastrowid
+        conn.commit()
 
-    print("Item donated successfully!")
-    print(f"Item ID: {item_id}")
+        print("Item donated successfully!")
+        print(f"Item ID: {item_id}")
 
-    print("Thank you for your donation!")
+        print("Thank you for your donation!")
+        break
+
 
 
 
 def find_event(conn,cur):
+    # allows the user to search for an event in the library by name, type, or audience type
     keywords=input("Enter keywords to search for an event (or type EXIT() to cancel): ").strip()
     if keywords.upper()=="EXIT()":
-        print("Search cancelled.")
+        print("Search canceled")
         return
     
     cur.execute("SELECT eventID,eventName,eventType,eventDate,audienceType FROM Event WHERE eventName LIKE ? OR eventType LIKE ? OR audienceType LIKE ?",(f'%{keywords}%',f'%{keywords}%',f'%{keywords}%'))
     results=cur.fetchall()
     if not results:
-        print("No events found.")
+        print("No events found")
         return
     
     print("Events Matching Your Search:")
     print(f"{'ID':<4} {'Name':<25} {'Type':<15} {'Date':<12} {'Audience':<10}")
     print("-"*70)
 
-    for (event_id,name,etype,edate,audience) in results:
+    for result in results:
+        event_id,name,etype,edate,audience=result
         print(f"{event_id:<4} {name:<25} {etype:<15} {edate:<12} {audience:<10}")
     print()
 
 
 
 def show_available_events(conn,cur,limit=5):
+    # helper function to show available events in the library
     cur.execute("SELECT eventID,eventName,eventType,eventDate,audienceType FROM Event ORDER BY eventID LIMIT ?",(limit,))
     rows=cur.fetchall()
     if rows:
@@ -233,6 +252,8 @@ def show_available_events(conn,cur,limit=5):
 
 
 def show_signed_up_events(conn,cur,member_id):
+    # helper function to show events the user is registered for based on member id
+    # displays a formatted table
     cur.execute("SELECT E.eventID,E.eventName,E.eventType,E.eventDate,E.audienceType FROM Register R JOIN Event E ON R.eventID=E.eventID WHERE R.memberID=?",(member_id,))
     rows=cur.fetchall()
     if rows:
@@ -243,46 +264,50 @@ def show_signed_up_events(conn,cur,member_id):
         for r in rows:
             print(f"{r[0]:<4} {r[1]:<25} {r[2]:<15} {r[3]:<12} {r[4]:<10}")
     else:
-        print("\nYou are not registered for any events.")
+        print("\nYou are not registered for any events at this time")
 
 
 
 def register_for_event(conn,cur,member_id):
-    print("\nRegister for an event:")
-    show_signed_up_events(conn,cur,member_id)
-    show_available_events(conn,cur)
-    event_id=input("Enter the ID of the event to register for (or type EXIT() to cancel): ").strip()
-    if event_id.upper()=="EXIT()":
-        print("Registration cancelled.")
-        return
-    
-    if not event_id.isdigit():
-        print("Invalid input. Enter a numeric event ID.")
-        return
-    
-    try:
-        event_id=int(event_id)
-        cur.execute("INSERT INTO Register (memberID,eventID) VALUES (?,?)",(member_id,event_id))
-        conn.commit()
-        print("Registration successful!")
-        print(f"Registered for event ID {event_id}.")
+    # lts user sign up for event
+    while True:
+        print("\nRegister for an event:")
+        show_signed_up_events(conn,cur,member_id)
+        show_available_events(conn,cur)
+        event_id=input("Enter the ID of the event to register for (or type EXIT() to cancel): ").strip()
+        if event_id.upper()=="EXIT()":
+            print("Registration cancelled.")
+            break
+        
+        if not event_id.isdigit():
+            print("ID should be numeric")
+            continue
+        
+        try:
+            event_id=int(event_id)
+            cur.execute("INSERT INTO Register (memberID,eventID) VALUES (?,?)",(member_id,event_id))
+            conn.commit()
+            print("Registration successful!")
+            print(f"Registered for event ID {event_id}.")
+            break
 
-    except sqlite3.IntegrityError as e:
-        print("You are already registered for this event.")
-        print(f"DEBUG: {e}")
-
-    except sqlite3.OperationalError as e:
-        print(f"Operational Error: {e}")
-        return
+        except sqlite3.IntegrityError as e:
+            print("You are already registered for this event")
+            #print(f"DEBUG: {e}")
+            continue
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: {e}, if this is unexpected please file a help request")
+            break
 
 
 
 def print_available_jobs(conn,cur):
+    # helper function to show available volunteering positions in the library
     cur.execute("SELECT positionID,positionName,positionDescription,location,isAvailable FROM VolunteeringPositions WHERE isAvailable=1 ORDER BY positionID")
     rows=cur.fetchall()
 
     if not rows:
-        print("No available volunteering positions at the moment.")
+        print("No positions at the moment")
         return
     print("Available Volunteering Positions:")
 
@@ -298,11 +323,12 @@ def print_available_jobs(conn,cur):
 
 
 def print_current_volunteering_positions(conn,cur,member_id):
+    # helper function to show current volunteering positions the user is registered for based on member id
     cur.execute("SELECT V.positionID,P.positionName,P.positionDescription,P.location FROM Volunteer V JOIN VolunteeringPositions P ON V.positionID=P.positionID WHERE V.memberID=?",(member_id,))
     rows=cur.fetchall()
 
     if not rows:
-        print("You are not registered for any volunteering positions.")
+        print("You are not registered for any volunteering")
         return
     
     print("Your Volunteering Positions:")
@@ -317,45 +343,48 @@ def print_current_volunteering_positions(conn,cur,member_id):
 
 
 def volunteer(conn,cur,member_id):
-    print("\nVolunteer for the library:")
-    print_current_volunteering_positions(conn,cur,member_id)
-    print_available_jobs(conn,cur)
+    while True:
+        print("\nVolunteer for the library:")
+        print_current_volunteering_positions(conn,cur,member_id)
+        print_available_jobs(conn,cur)
 
-    positionid=input("Enter the ID of the position to volunteer for (or type EXIT() to cancel): ").strip()
-    if positionid.upper()=="EXIT()":
-        print("Volunteer process cancelled.")
-        return
-    
-    if not positionid.isdigit():
-        print("Invalid input. Enter a numeric position ID.")
-        return
-    
-    positionid=int(positionid)
-    cur.execute("SELECT isAvailable FROM VolunteeringPositions WHERE positionID=?",(positionid,))
-    row=cur.fetchone()
+        positionid=input("Enter the ID of the position to volunteer for (or type EXIT() to cancel): ").strip()
+        if positionid.upper()=="EXIT()":
+            print("Volunteer process cancelled")
+            break
+        
+        if not positionid.isdigit():
+            print("ID should be numeric")
+            continue
+        
+        positionid=int(positionid)
+        cur.execute("SELECT isAvailable FROM VolunteeringPositions WHERE positionID=?",(positionid,))
+        row=cur.fetchone()
 
-    if not row:
-        print("No position found with that ID.")
-        return
-    
-    if row[0]==0:
-        print(f"Position {positionid} is not available.")
-        return
-    
-    try:
-        cur.execute("INSERT INTO Volunteer (memberID,positionID) VALUES (?,?)",(member_id,positionid))
-        cur.execute("UPDATE VolunteeringPositions SET isAvailable=0 WHERE positionID=?",(positionid,))
-        conn.commit()
-        print("Volunteer registration successful!")
-        print(f"Registered for position ID {positionid}.")
+        if not row:
+            print("No position found with that ID")
+            continue
+        
+        if row[0]==0:
+            print(f"Position {positionid} is not available.")
+            break
+        
+        try:
+            cur.execute("INSERT INTO Volunteer (memberID,positionID) VALUES (?,?)",(member_id,positionid))
+            cur.execute("UPDATE VolunteeringPositions SET isAvailable=0 WHERE positionID=?",(positionid,))
+            conn.commit()
+            print("Volunteer registration successful!")
+            print(f"Registered for position ID {positionid}.")
+            break
 
-    except sqlite3.IntegrityError as e:
-        print("You are already registered for this position.")
-        print(f"DEBUG: {e}")
+        except sqlite3.IntegrityError as e:
+            print("You are already registered for this position.")
+            #print(f"DEBUG: {e}")
+            continue
 
-    except sqlite3.OperationalError as e:
-        print(f"Operational Error: {e}")
-        return
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: {e}")
+            break
 
 
 
@@ -384,8 +413,8 @@ def request_help(conn,cur,member_id):
             break
     
         except sqlite3.IntegrityError as e:
-            print("Unable to submit help request.")
-            print(f"DEBUG: {e}")
+            print("Unable to submit help request, please try again")
+            #print(f"DEBUG: {e}")
 
         except sqlite3.OperationalError as e:
             print(f"Operational Error: {e}")
@@ -399,7 +428,7 @@ def view_all_members(conn,cur):
 
     rows=cur.fetchall()
     if not rows:
-        print("No members found.")
+        print("No members found")
         return
     
     print(f"{'ID':<4} {'Name':<30} {'Email':<25} {'Phone':<15}")
@@ -430,7 +459,7 @@ def view_all_borrowed_items(conn,cur):
 def view_all_volunteers(conn,cur):
     print("\nCurrently Registered Volunteers:")
     cur.execute("SELECT V.memberID,M.firstName||' '||M.lastName,P.positionName,P.location FROM Volunteer V JOIN Member M ON V.memberID=M.memberID JOIN VolunteeringPositions P ON V.positionID=P.positionID")
-    rows=cur.fetchall()
+    rows= cur.fetchall()
 
     if not rows:
         print("No volunteers found.")
@@ -477,6 +506,68 @@ def view_all_events(conn,cur):
         print()
 
 
+def add_volunteering_position(conn,cur):
+    while True:
+
+        print("\nAdd volunteering position")
+
+        position_name=input("Enter the position name (or type EXIT() to cancel): ").strip()
+        if position_name.upper()=="EXIT()":
+            print("Operation cancelled.")
+            return
+        location=input("Enter the location: ").strip()
+        description=input("Enter the position description: ").strip()
+
+        if not position_name or not location or not description:
+            print("All fields are required.")
+            continue
+
+        # position automaticaly available
+
+        cur.execute("INSERT INTO VolunteeringPositions (positionName,positionDescription,location,isAvailable) VALUES (?,?,?,?)",(position_name,description,location,1))
+        position_id=cur.lastrowid
+
+        conn.commit()
+        print("Volunteering position added successfully!")
+        print(f"Position ID: {position_id}")
+        break
+    
+    
+
+def add_event(conn,cur):
+    while True:
+        print("\nAdd an event")
+        event_name=input("Enter the event name (or type EXIT() to cancel): ").strip()
+        if event_name.upper()=="EXIT()":
+            print("Operation cancelled.")
+            return
+        event_type=input("Enter the event type: ").strip()
+        audience_type=input("Enter the audience type: ").strip()
+        event_date=input("Enter the event date (YYYY-MM-DD) ").strip()
+        event_location=input("Enter the event location ").strip()
+        room_number=input("Enter the room number: ").strip()
+        if not event_name or not event_type or not audience_type or not event_date or not event_location:
+            print("All fields are required other than room number.")
+            continue
+
+        try:
+            event_date_obj=date.fromisoformat(event_date)
+        except ValueError:
+            print("Invalid date format use YYYY-MM-DD.")
+            continue
+
+        cur.execute("INSERT INTO Event (eventName,eventType,audienceType,eventDate,eventLocation,roomNumber) VALUES (?,?,?,?,?,?)",(event_name,event_type,audience_type,event_date_obj.isoformat(),event_location,room_number))
+        event_id=cur.lastrowid
+        conn.commit()
+
+        print("Event added successfully!")
+        print(f"Event ID: {event_id}")
+        break
+
+
+
+
+
 
 def personnel_menu(conn,cur,personnel_id):
     while True:
@@ -486,7 +577,9 @@ def personnel_menu(conn,cur,personnel_id):
         print("3. View all volunteers")
         print("4. View all help requests")
         print("5. View all events")
-        print("6. Exit")
+        print("6. Add a volunteering position")
+        print("7. Add an event")
+        print("8. Exit")
         choice=input("Choose an option: ").strip()
         if choice.upper()=="EXIT()":
             print("Exiting menu.")
@@ -502,6 +595,10 @@ def personnel_menu(conn,cur,personnel_id):
         elif choice=='5':
             view_all_events(conn,cur)
         elif choice=='6':
+            add_volunteering_position(conn,cur)
+        elif choice=='7':
+            add_event(conn,cur)
+        elif choice=='8':
             print("Exiting...")
             break
         else:
@@ -569,25 +666,21 @@ def sign_in(conn,cur):
             if member_id.upper()=="EXIT()":
                 continue
 
-            first_name=input("Enter your first name (or type EXIT() to cancel): ").strip()
-
-            if first_name.upper()=="EXIT()":
-                continue
-
+            first_name=input("Enter your first name: ").strip()
             cur.execute("SELECT * FROM Member WHERE memberID=?",(member_id,))
 
             result=cur.fetchone()
 
             if result:
                 if result[1].lower()!=first_name.lower():
-                    print("First name does not match the member ID.")
+                    print("First name does not match the ID you provided")
                     continue
 
                 print(f"Welcome back, {first_name}!")
                 return ('member',result[0])
             
             else:
-                print("Member ID not found.")
+                print("We can't find a member with that ID")
                 continue
 
         elif choice=='2':
@@ -595,15 +688,13 @@ def sign_in(conn,cur):
             if personnel_id.upper()=="EXIT()":
                 continue
 
-            first_name=input("Enter your first name (or type EXIT() to cancel): ").strip()
-            if first_name.upper()=="EXIT()":
-                continue
+            first_name=input("Enter your first name: ").strip()
 
             cur.execute("SELECT * FROM Personnel WHERE personnelID=?",(personnel_id,))
             result=cur.fetchone()
             if result:
                 if result[1].lower()!=first_name.lower():
-                    print("First name does not match the personnel ID.")
+                    print("First name does not match the personnel ID you provided")
                     continue
 
                 print(f"Welcome back, {first_name}!")
@@ -628,6 +719,9 @@ def sign_in(conn,cur):
 
 
 def register_member(conn,cur):
+    # allows the user to register as a new member
+
+    # returns the member ID of the newly registered member
     while True:
         print("\nRegister as a new member:")
 
@@ -637,23 +731,9 @@ def register_member(conn,cur):
             print("Registration cancelled.")
             return None
         
-        last_name=input("Enter your last name (or type EXIT() to cancel): ").strip()
-
-        if last_name.upper()=="EXIT()":
-            print("Registration cancelled.")
-            return None
-        
-        email=input("Enter your email address (or type EXIT() to cancel): ").strip() or None
-
-        if email and email.upper()=="EXIT()":
-            print("Registration cancelled.")
-            return None
-        
-        phone_number=input("Enter your phone number (or type EXIT() to cancel): ").strip() or None
-
-        if phone_number and phone_number.upper()=="EXIT()":
-            print("Registration cancelled.")
-            return None
+        last_name=input("Enter your last name").strip()
+        email=input("Enter your email address: ").strip() or None
+        phone_number=input("Enter your phone number: ").strip() or None
         
         if not first_name or not last_name:
             print("First name and last name are required.")
@@ -669,7 +749,7 @@ def register_member(conn,cur):
 
         print("Registration successful!")
         print(f"Welcome, {first_name}! Your member ID is {member_id}.")
-        print("Make sure to write it down for future reference.")
+        print("Make sure to write it down for future reference, as you will need it to sign in")
 
         return member_id
 
@@ -691,6 +771,10 @@ def startup():
     print(f"Member Type: {user_type}")
     print(f"Member ID: {user_id}")
 
+    # check if user is a member or personnel
+    if user_type not in ['member','personnel']:
+        print("Invalid user type, Exiting...") # should never happen
+        return
     if user_type=='member':
         main_menu(conn,cur,user_id)
     elif user_type=='personnel':
