@@ -39,6 +39,10 @@ def find_item(conn,cur):
         if keywords.upper()=="EXIT()":
             break
 
+        if keywords=="":
+            print("No keywords entered, please try again")
+            continue
+
         cur.execute("SELECT itemID,title,author,itemType,itemStatus FROM LibraryItem WHERE title LIKE ? OR author LIKE ? OR itemType LIKE ?",(f'%{keywords}%',f'%{keywords}%',f'%{keywords}%'))
         results=cur.fetchall()
         if results:
