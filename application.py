@@ -51,7 +51,7 @@ def find_item(conn,cur):
             print(f"{'ID':<4} {'Title':<30} {'Author':<20} {'Type':<15} {'Status':<12}")
             print("-"*80)
             for row in results:
-                print(f"{row[0]:<4} {row[1]:<30} {row[2]:<20} {row[3]:<15} {row[4]:<12}")
+                print(f"{row[0]:<4} {row[1]:<30} {row[2] or 'N/A':<20} {row[3] or 'N/A':<15} {row[4] or 'N/A':<12}")
         else:
             print("No items found with your search criteria")
 
@@ -67,7 +67,7 @@ def show_available_items(cur,limit=5):
         print(f"{'ID':<4} {'Title':<30} {'Author':<20}")
         print("-"*60)
         for r in rows:
-            print(f"{r[0]:<4} {r[1]:<30} {r[2]:<20}")
+            print(f"{r[0]:<4} {r[1] or 'N/A':<30} {r[2] or 'N/A':<20}")
     else:
         print("\nNo items available at the moment")
 
@@ -141,7 +141,7 @@ def return_item(cur,conn,member_id):
     print("-"*80)
 
     for item in items:
-        print(f"{item[0]:<4} {item[1]:<30} {item[2]:<20} {item[3]:<12} {item[4]:<12}")
+        print(f"{item[0] or 'N/A':<4} {item[1] or 'N/A':<30} {item[2] or 'N/A':<20} {item[3] or 'N/A':<12} {item[4] or 'N/A':<12}")
     
     while True:
         time.sleep(1)
@@ -186,7 +186,7 @@ def donate_item(conn,cur):
         author=input("Enter the author: ").strip()
         item_type=input("Enter the type (e.g., Book, DVD): ").strip()
         year_input=input("Enter the year of publication: ").strip()
-        
+
         try:
             year=int(year_input)
         except:
@@ -235,7 +235,7 @@ def find_event(conn,cur):
 
     for result in results:
         event_id,name,etype,edate,audience=result
-        print(f"{event_id:<4} {name:<25} {etype:<15} {edate:<12} {audience:<10}")
+        print(f"{event_id or 'N/A':<4} {name or 'N/A':<25} {etype or 'N/A':<15} {edate or 'N/A':<12} {audience or 'N/A':<10}")
     print()
 
 
@@ -249,7 +249,7 @@ def show_available_events(conn,cur,limit=5):
         print(f"{'ID':<4} {'Name':<25} {'Type':<15} {'Date':<12} {'Audience':<10}")
         print("-"*70)
         for r in rows:
-            print(f"{r[0]:<4} {r[1]:<25} {r[2]:<15} {r[3]:<12} {r[4]:<10}")
+            print(f"{r[0] or 'N/A':<4} {r[1] or 'N/A':<25} {r[2] or 'N/A':<15} {r[3] or 'N/A':<12} {r[4] or 'N/A':<10}")
     else:
         print("\nNo events available at the moment.")
 
@@ -266,7 +266,7 @@ def show_signed_up_events(conn,cur,member_id):
         print("-"*70)
 
         for r in rows:
-            print(f"{r[0]:<4} {r[1]:<25} {r[2]:<15} {r[3]:<12} {r[4]:<10}")
+            print(f"{r[0] or 'N/A':<4} {r[1] or 'N/A':<25} {r[2] or 'N/A':<15} {r[3] or 'N/A':<12} {r[4] or 'N/A':<10}")
     else:
         print("\nYou are not registered for any events at this time")
 
@@ -319,7 +319,7 @@ def print_available_jobs(conn,cur):
 
     print("-"*60)
     for row in rows:
-        print(f"{row[0]:<4} {row[1]:<25} {row[3]:<20}")
+        print(f"{row[0] or 'N/A':<4} {row[1] or 'N/A':<25} {row[3] or 'N/A':<20}")
         if row[2]:
             print(f"Description: {row[2]}")
         print()
@@ -339,7 +339,7 @@ def print_current_volunteering_positions(conn,cur,member_id):
     print(f"{'ID':<4} {'Position Name':<25} {'Location':<20}")
     print("-"*60)
     for row in rows:
-        print(f"{row[0]:<4} {row[1]:<25} {row[3]:<20}")
+        print(f"{row[0] or 'N/A':<4} {row[1] or 'N/A':<25} {row[3] or 'N/A':<20}")
         if row[2]:
             print(f"Description: {row[2]}")
         print()
@@ -438,7 +438,7 @@ def view_all_members(conn,cur):
     print(f"{'ID':<4} {'Name':<30} {'Email':<25} {'Phone':<15}")
     print("-"*80)
     for row in rows:
-        print(f"{row[0]:<4} {row[1]+' '+row[2]:<30} {row[3] or 'N/A':<25} {row[4] or 'N/A':<15}")
+        print(f"{row[0] or 'N/A':<4} {row[1]+' '+row[2]:<30} {row[3] or 'N/A':<25} {row[4] or 'N/A':<15}")
         print()
 
 
@@ -455,7 +455,7 @@ def view_all_borrowed_items(conn,cur):
     print(f"{'Item ID':<8} {'Title':<30} {'Borrower':<25} {'Borrowed':<12} {'Due':<12}")
     print("-"*90)
     for row in rows:
-        print(f"{row[0]:<8} {row[1]:<30} {row[2]:<25} {row[3]:<12} {row[4]:<12}")
+        print(f"{row[0]:<8} {row[1]:<30} {row[2] or 'N/A':<25} {row[3] or 'N/A':<12} {row[4] or 'N/A':<12}")
         print()
 
 
@@ -472,7 +472,7 @@ def view_all_volunteers(conn,cur):
     print(f"{'Member ID':<10} {'Name':<30} {'Position':<25} {'Location':<20}")
     print("-"*90)
     for row in rows:
-        print(f"{row[0]:<10} {row[1]:<30} {row[2]:<25} {row[3]:<20}")
+        print(f"{row[0]:<10} {row[1] or 'N/A':<30} {row[2] or 'N/A':<25} {row[3] or 'N/A':<20}")
         print()
 
 
@@ -489,7 +489,7 @@ def view_all_help_requests(conn,cur):
     print(f"{'Request ID':<10} {'Member Name':<30} {'Date':<12} {'Topic':<40}")
     print("-"*100)
     for row in rows:
-        print(f"{row[0]:<10} {row[1]:<30} {row[2]:<12} {row[3]:<40}")
+        print(f"{row[0]:<10} {row[1] or 'N/A':<30} {row[2] or 'N/A':<12} {row[3] or 'N/A':<40}")
         print()
 
 
@@ -506,7 +506,7 @@ def view_all_events(conn,cur):
     print(f"{'Event ID':<8} {'Name':<25} {'Type':<15} {'Date':<12} {'Audience':<10} {'Location':<20} {'Room':<8}")
     print("-"*110)
     for row in rows:
-        print(f"{row[0]:<8} {row[1]:<25} {row[2]:<15} {row[3]:<12} {row[4]:<10} {row[5]:<20} {row[6]:<8}")
+        print(f"{row[0]:<8} {row[1] or 'N/A':<25} {row[2] or 'N/A':<15} {row[3] or 'N/A':<12} {row[4] or 'N/A':<10} {row[5] or 'N/A':<20} {row[6] or 'N/A':<8}")
         print()
 
 
