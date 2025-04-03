@@ -382,7 +382,7 @@ def volunteer(conn,cur,member_id):
             break
 
         except sqlite3.IntegrityError as e:
-            print("You are already registered for this position.")
+            print("You or someone else is already registered for this position.")
             #print(f"DEBUG: {e}")
             continue
 
@@ -445,7 +445,7 @@ def view_all_members(conn,cur):
 
 def view_all_borrowed_items(conn,cur):
     print("\nCurrently Borrowed Items:")
-    cur.execute("SELECT B.itemID,L.title,M.firstName||' '||M.lastName,B.borrowDate,B.dueDate FROM Borrows B JOIN LibraryItem L ON B.itemID=L.itemID JOIN Member M ON B.memberID=M.memberID")
+    cur.execute("SELECT B.itemID,L.title,M.firstName||' '||M.lastName,B.borrowDate,B.dueDate FROM Borrows B JOIN LibraryItem L ON B.itemID=L.itemID JOIN Member M ON B.memberID=M.memberID WHERE ReturnDate IS NULL")
     rows=cur.fetchall()
 
     if not rows:
@@ -569,6 +569,32 @@ def add_event(conn,cur):
         break
 
 
+def approve_future_item(conn, cur):
+    print("\nApprove a Future Item:")
+    item_id_input = input("Enter the itemID of the future item to approve (or type EXIT() to cancel): ").strip()
+    if item_id_input.upper()=="EXIT()":
+        print("Approval cancelled.")
+        return
+
+    if not item_id_input.isdigit():
+        print("Invalid input. Please enter a numeric itemID.")
+        return
+    item_id=int(item_id_input)
+
+    cur.execute("SELECT approvalStatus FROM FutureItem WHERE itemID=?", (item_id,))
+    row=cur.fetchone()
+    if not row:
+        print("No future item found with that itemID.")
+        return
+    
+    current_status=row[0]
+    if current_status!='Pending':
+        print(f"Future item {item_id} is not pending, current status is '{current_status}'.")
+        return
+
+    cur.execute("UPDATE FutureItem SET approvalStatus='Complete' WHERE itemID=?",(item_id,))
+    conn.commit()
+    print(f"Future item {item_id} has been approved and is now set to function normally (Available).")
 
 
 
@@ -583,7 +609,8 @@ def personnel_menu(conn,cur,personnel_id):
         print("5. View all events")
         print("6. Add a volunteering position")
         print("7. Add an event")
-        print("8. Exit")
+        print("8. Approve an item")
+        print("9. Exit")
         choice=input("Choose an option: ").strip()
         if choice.upper()=="EXIT()":
             print("Exiting menu.")
@@ -603,6 +630,8 @@ def personnel_menu(conn,cur,personnel_id):
         elif choice=='7':
             add_event(conn,cur)
         elif choice=='8':
+            approve_future_item(conn,cur)
+        elif choice=='9':
             print("Exiting...")
             break
         else:
